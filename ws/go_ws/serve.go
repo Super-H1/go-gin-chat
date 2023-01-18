@@ -424,10 +424,18 @@ func formatServeMsgStr(status int, conn *websocket.Conn) ([]byte, msg) {
 		data.List = ro
 	}
 
-	if status == msgRobot {
-		data.AvatarId = clientMsg.Data.AvatarId
-
-		data.Content = "robot 123 test"
+	if status == msgRobot || status == msgTypeOnline {
+		psychologists := models.FindPsychologistsByRoomId(data.RoomId)
+		data.Username = psychologists.Name
+		data.Uid = strconv.Itoa(int(psychologists.ID))
+		data.Time = time.Now().UnixNano() / 1e6
+		data.AvatarId = psychologists.AvatarId
+		if status == msgTypeOnline {
+			status = msgRobot
+			data.Content = "你好，我是咨询师" + psychologists.Name
+		} else {
+			data.Content = "robot 123 test"
+		}
 	}
 
 	jsonStrServeMsg := msg{
